@@ -1,0 +1,100 @@
+-- Set up the lava projectile
+local lavaProjectile = Instance.new("Part")
+lavaProjectile.Name = "LavaProjectile"
+lavaProjectile.Shape = Enum.PartType.Ball
+lavaProjectile.Size = Vector3.new(2, 2, 2)
+lavaProjectile.Color = Color3.fromRGB(255, 0, 0)
+lavaProjectile.Material = Enum.Material.Neon
+lavaProjectile.Anchored = true
+lavaProjectile.CanCollide = false
+
+-- Add a fire particle effect to the lava projectile
+local fire = Instance.new("ParticleEmitter")
+fire.Parent = lavaProjectile
+fire.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0))
+fire.LightEmission = 0.75
+fire.Size = NumberSequence.new(1, 0)
+fire.Texture = "rbxassetid://244221613"
+fire.Transparency = NumberSequence.new(0, 1)
+fire.ZOffset = 1
+
+-- Add the lava projectile to the ReplicatedStorage so it can be used in other scripts
+lavaProjectile.Parent = game.ReplicatedStorage
+
+-- Set up the cone model
+local cone = workspace.LavaSpinner
+
+-- Set up the variables for the speed and the lava projectile
+local speed = 10
+
+
+local jumpHeight = 5
+local jumpSpeed = 2
+
+-- Define a function to get the player character position
+local function getPlayerPosition()
+	
+	local Players = game:GetService("Players")
+	--print count of players
+	--print(Players.NumPlayers)
+	
+	for _,player in pairs(Players:GetPlayers()) do
+		if player then
+			--print(player.Name)
+			--get the player location
+			if player.Character then
+				local playerLocation = player.Character.HumanoidRootPart.Position
+				return playerLocation
+			end
+		end
+	end
+end
+-- Define a function to make the cone spin and shoot lava
+local function spinAndShoot()
+	
+	assert(lavaProjectile, "Failed to find LavaProjectile object in ReplicatedStorage")
+		
+	
+	-- Calculate the current height of the cone based on the sine of the current time
+	local height = math.sin(time() * jumpSpeed) * jumpHeight
+
+	-- Set the position of the cone based on the current height and the rotation of the cone
+	local rotation = cone.Torso.CFrame - cone.Torso.CFrame.p
+	cone.Torso.CFrame = CFrame.new(cone.Torso.Position.x, height, cone.Torso.Position.z) * rotation
+	
+	-- Spin the cone
+	cone.Torso.CFrame = cone.Torso.CFrame * CFrame.Angles(0, math.rad(speed), 0)
+
+	local playerPos = getPlayerPosition()
+	-- Shoot the Lava Projectile at the player's location
+	local projectile = lavaProjectile:Clone()
+	projectile.Position = Vector3.new(cone.Torso.CFrame) -- Set starting position of the projectile
+	--projectile.CFrame = projectile.CFrame * CFrame.new(0, 0, -5)
+	projectile.Parent = workspace
+	if(playerPos) then
+		print(playerPos)
+		print(projectile.Position)
+		local direction = (playerPos - projectile.Position).Unit -- Calculate the direction vector
+		print("Direction:", direction)
+		--print("waiting 30")
+		--wait(30)
+
+		--direction = Vector3.new(20,20,20)
+		--projectile.CFrame = CFrame.new(projectile.CFrame.Position + direction)
+		projectile.Position = playerPos - Vector3.new(2,2,2)
+		--projectile.Velocity = direction
+		--projectile.Velocity = Vector3.new(255,255,255)
+
+		--projectile.CFrame = CFrame.new(projectile.Position + projectile.Velocity)
+
+		projectile.RotVelocity = Vector3.new(math.random(-90, 90), math.random(-90, 90), math.random(-90, 90))
+	end	
+end	
+		
+		
+while(true) do
+	-- Wait a little before calling the function again
+	wait(0.1)
+	spinAndShoot()
+
+end		
